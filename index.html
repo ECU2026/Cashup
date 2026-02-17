@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ATM Finder</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap" async defer></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        #map {
+            height: 600px;
+            width: 100%;
+        }
+        .container {
+            margin: 20px;
+        }
+        h1 {
+            text-align: center;
+        }
+        .atm-list {
+            margin-top: 20px;
+        }
+        .atm {
+            background: #ffffff;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ATM Finder</h1>
+        <div id="map"></div>
+        <div class="atm-list">
+            <div class="atm">ATM 1: Nasr City - Location A</div>
+            <div class="atm">ATM 2: Nasr City - Location B</div>
+            <div class="atm">ATM 3: New Cairo - Location A</div>
+            <div class="atm">ATM 4: Maadi - Location A</div>
+            <div class="atm">ATM 5: Gezira - Location A</div>
+        </div>
+    </div>
+    <script>
+        function initMap() {
+            const map = new google.maps.Map(document.getElementById("map"), {
+                zoom: 12,
+                center: { lat: 30.0626, lng: 31.2497 }, // Centered at Cairo
+            });
+            const locations = [
+                { lat: 30.0595, lng: 31.2765, name: "Nasr City - Location A" },
+                { lat: 30.0580, lng: 31.3050, name: "Nasr City - Location B" },
+                { lat: 30.0128, lng: 31.4810, name: "New Cairo - Location A" },
+                { lat: 29.9652, lng: 31.2570, name: "Maadi - Location A" },
+                { lat: 29.9792, lng: 31.2065, name: "Gezira - Location A" },
+            ];
+            locations.forEach((location) => {
+                new google.maps.Marker({
+                    position: { lat: location.lat, lng: location.lng },
+                    map: map,
+                    title: location.name,
+                });
+            });
+        }
+    </script>
+</body>
+</html>
