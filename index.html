@@ -2,72 +2,1378 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ATM Finder</title>
-    <link rel="stylesheet" href="styles.css">
-    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap" async defer></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>CashUp • Real-Time ATM Status Egypt</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300..800&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: Arial, sans-serif;
+        * {
             margin: 0;
             padding: 0;
-            background-color: #f4f4f4;
+            box-sizing: border-box;
         }
-        #map {
-            height: 600px;
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #ffffff;
+            color: #1e293b;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        :root {
+            --primary: #0f5b5c;
+            --primary-light: #e9f3f2;
+            --accent: #c8a45c;
+            --accent-light: #faf3e3;
+            --navy: #1e293b;
+            --gray-bg: #f9fafc;
+            --gray-border: #edf2f7;
+        }
+        
+        .container-custom {
+            width: 100%;
+            margin: 0 auto;
+            padding: 0 1.25rem;
+        }
+        
+        @media (min-width: 640px) {
+            .container-custom {
+                padding: 0 2rem;
+            }
+        }
+        
+        @media (min-width: 1280px) {
+            .container-custom {
+                max-width: 1280px;
+                padding: 0 2rem;
+            }
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 60px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 8px 20px -10px var(--primary);
             width: 100%;
         }
-        .container {
-            margin: 20px;
+        
+        @media (min-width: 640px) {
+            .btn-primary {
+                width: auto;
+                padding: 0.875rem 2rem;
+                font-size: 1rem;
+            }
         }
-        h1 {
-            text-align: center;
+        
+        .btn-outline {
+            background: white;
+            color: var(--primary);
+            padding: 0.75rem 1.5rem;
+            border-radius: 60px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            border: 1px solid var(--gray-border);
+            cursor: pointer;
+            width: 100%;
         }
+        
+        @media (min-width: 640px) {
+            .btn-outline {
+                width: auto;
+                padding: 0.875rem 2rem;
+                font-size: 1rem;
+            }
+        }
+        
+        .card-modern {
+            background: white;
+            border: 1px solid var(--gray-border);
+            border-radius: 24px;
+            transition: all 0.3s ease;
+        }
+        
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 60px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            white-space: nowrap;
+        }
+        
+        @media (min-width: 640px) {
+            .badge {
+                padding: 0.3rem 1rem;
+                font-size: 0.75rem;
+            }
+        }
+        
+        .badge-success {
+            background: #e3f2ed;
+            color: #0b5e42;
+            border: 1px solid #b8e2d4;
+        }
+        
+        .badge-error {
+            background: #fee9e7;
+            color: #b33a34;
+            border: 1px solid #fbc5c0;
+        }
+        
+        .badge-warning {
+            background: #fff4e0;
+            color: #946f2b;
+            border: 1px solid #f9e0b0;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        
+        @media (min-width: 640px) {
+            .status-dot {
+                width: 10px;
+                height: 10px;
+            }
+        }
+        
+        .dot-green { background: #10b981; box-shadow: 0 0 0 2px rgba(16,185,129,0.1); }
+        .dot-red { background: #ef4444; box-shadow: 0 0 0 2px rgba(239,68,68,0.1); }
+        .dot-gold { background: #c8a45c; box-shadow: 0 0 0 2px rgba(200,164,92,0.1); }
+        
+        .map-marker {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        @media (min-width: 640px) {
+            .map-marker {
+                width: 22px;
+                height: 22px;
+                border: 3px solid white;
+            }
+        }
+        
+        .map-marker.in { background: #10b981; }
+        .map-marker.out { background: #ef4444; }
+        .map-marker.maintenance { background: #c8a45c; }
+        .map-marker.user { 
+            background: #3b82f6; 
+            width: 16px; 
+            height: 16px; 
+            border: 3px solid white;
+            box-shadow: 0 0 0 2px #3b82f6;
+        }
+        
+        .nav-link {
+            color: #64748b;
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: color 0.2s;
+            position: relative;
+        }
+        
+        .nav-link:hover {
+            color: var(--primary);
+        }
+        
+        .nav-link.active {
+            color: var(--primary);
+            font-weight: 600;
+        }
+        
+        .nav-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: var(--primary);
+            border-radius: 2px;
+        }
+        
+        .mobile-menu-button {
+            display: block;
+            padding: 0.5rem;
+        }
+        
+        @media (min-width: 768px) {
+            .mobile-menu-button {
+                display: none;
+            }
+        }
+        
+        .mobile-nav {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 1rem;
+            border-bottom: 1px solid var(--gray-border);
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+        }
+        
+        .mobile-nav.show {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .map-container {
+            height: 400px;
+        }
+        
+        @media (min-width: 768px) {
+            .map-container {
+                height: 600px;
+            }
+        }
+        
         .atm-list {
-            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+            padding-right: 0.5rem;
         }
-        .atm {
-            background: #ffffff;
-            padding: 15px;
-            margin: 10px 0;
-            border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        
+        @media (min-width: 768px) {
+            .atm-list {
+                max-height: 500px;
+            }
+        }
+        
+        .gps-loading {
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .pricing-card {
+            transition: all 0.3s ease;
+        }
+        
+        .pricing-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px -15px rgba(0,0,0,0.2);
+        }
+        
+        .pricing-card.recommended {
+            border: 2px solid var(--accent);
+            position: relative;
+        }
+        
+        .pricing-card.recommended::before {
+            content: 'الأكثر طلباً';
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--accent);
+            color: white;
+            padding: 0.25rem 1rem;
+            border-radius: 60px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        
+        @media (min-width: 640px) {
+            .pricing-card.recommended::before {
+                content: 'Most Popular';
+            }
+        }
+        
+        .area-tag {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background: #f1f5f9;
+            border-radius: 60px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            color: #475569;
+            white-space: nowrap;
+        }
+        
+        .area-tag.active {
+            background: var(--primary);
+            color: white;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>ATM Finder</h1>
-        <div id="map"></div>
-        <div class="atm-list">
-            <div class="atm">ATM 1: Nasr City - Location A</div>
-            <div class="atm">ATM 2: Nasr City - Location B</div>
-            <div class="atm">ATM 3: New Cairo - Location A</div>
-            <div class="atm">ATM 4: Maadi - Location A</div>
-            <div class="atm">ATM 5: Gezira - Location A</div>
+
+    <!-- Header -->
+    <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100">
+        <div class="container-custom">
+            <div class="flex items-center justify-between h-16 md:h-20">
+                <!-- Logo -->
+                <a href="#" onclick="showTab('home'); return false;" class="flex items-center">
+                    <img src="https://i.ibb.co/ZpDF21Tt/Whats-App-Image-2026-02-16-at-6-46-57-PM.jpg" alt="CashUp" class="h-7 md:h-8 w-auto">
+                </a>
+                
+                <!-- Desktop Navigation -->
+                <nav class="hidden md:flex items-center space-x-6 lg:space-x-8">
+                    <a href="#" onclick="showTab('home'); return false;" class="nav-link" id="homeNav">Home</a>
+                    <a href="#" onclick="showTab('features'); return false;" class="nav-link">Features</a>
+                    <a href="#" onclick="showTab('pricing'); return false;" class="nav-link">Pricing</a>
+                    <a href="#" onclick="showTab('map'); return false;" class="nav-link">Live Map</a>
+                    <a href="#" onclick="showTab('about'); return false;" class="nav-link">About</a>
+                </nav>
+                
+                <!-- Desktop Right -->
+                <div class="hidden md:flex items-center gap-4">
+                    <span class="px-4 py-2 bg-[#c8a45c]/10 text-[#c8a45c] rounded-full text-sm font-semibold">
+                        7-day free trial
+                    </span>
+                    <button onclick="showTab('map')" class="btn-primary !w-auto !px-5 !py-2">
+                        <span>Get Started</span>
+                        <span class="text-lg">→</span>
+                    </button>
+                </div>
+                
+                <!-- Mobile Menu Button -->
+                <button class="mobile-menu-button text-2xl text-gray-600" onclick="toggleMobileMenu()">
+                    ☰
+                </button>
+            </div>
+            
+            <!-- Mobile Menu -->
+            <div id="mobileMenu" class="mobile-nav">
+                <a href="#" onclick="showTab('home'); return false;" class="nav-link text-base py-2" id="mobileHomeNav">Home</a>
+                <a href="#" onclick="showTab('features'); return false;" class="nav-link text-base py-2">Features</a>
+                <a href="#" onclick="showTab('pricing'); return false;" class="nav-link text-base py-2">Pricing</a>
+                <a href="#" onclick="showTab('map'); return false;" class="nav-link text-base py-2">Live Map</a>
+                <a href="#" onclick="showTab('about'); return false;" class="nav-link text-base py-2">About</a>
+                <div class="flex items-center justify-between pt-2 mt-2 border-t border-gray-100">
+                    <span class="text-[#c8a45c] font-semibold">7-day free trial</span>
+                    <button onclick="showTab('map')" class="bg-[#0f5b5c] text-white px-4 py-2 rounded-full text-sm font-medium">
+                        Get Started
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- HOME CONTENT -->
+    <div id="homeContent">
+        <!-- Hero Section -->
+        <section class="py-8 md:py-12 lg:py-20">
+            <div class="container-custom">
+                <div class="flex flex-col lg:flex-row items-center gap-8 md:gap-12 lg:gap-16">
+                    
+                    <!-- Left: Content -->
+                    <div class="w-full lg:w-1/2">
+                        <!-- Logo BIG -->
+                        <div class="mb-6 md:mb-8 lg:mb-10 text-center lg:text-left">
+                            <img src="https://i.ibb.co/ZpDF21Tt/Whats-App-Image-2026-02-16-at-6-46-57-PM.jpg" alt="CashUp" class="h-16 sm:h-20 md:h-24 lg:h-28 xl:h-32 w-auto mx-auto lg:mx-0 drop-shadow-md">
+                        </div>
+                        
+                        <!-- Tagline -->
+                        <div class="flex items-center justify-center lg:justify-start gap-2 md:gap-3 mb-4 md:mb-6">
+                            <span class="w-8 md:w-12 h-0.5 bg-[#c8a45c]"></span>
+                            <span class="text-[#c8a45c] font-semibold text-xs md:text-sm uppercase tracking-wider">Know Before You Go</span>
+                        </div>
+                        
+                        <!-- Headline -->
+                        <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-5xl xl:text-6xl font-extrabold text-[#1e293b] leading-tight mb-4 md:mb-6 text-center lg:text-left">
+                            Find Working
+                            <span class="text-[#0f5b5c] block sm:inline">ATMs</span> Instantly
+                        </h1>
+                        
+                        <p class="text-base md:text-lg lg:text-xl text-gray-500 mb-6 md:mb-8 max-w-lg mx-auto lg:mx-0 text-center lg:text-left">
+                            Egypt's first real-time ATM status platform. Covering <span class="font-semibold">مصر الجديدة, مدينة نصر, جسر السويس, هليوبليس</span> and all of Greater Cairo. 25,000+ ATMs across 37 banks.
+                        </p>
+                        
+                        <!-- Location Tags -->
+                        <div class="flex flex-wrap justify-center lg:justify-start gap-2 mb-6">
+                            <span class="area-tag">مصر الجديدة</span>
+                            <span class="area-tag">مدينة نصر</span>
+                            <span class="area-tag">جسر السويس</span>
+                            <span class="area-tag">هليوبليس</span>
+                            <span class="area-tag">العباسية</span>
+                            <span class="area-tag">الوايلي</span>
+                            <span class="area-tag">+12 areas</span>
+                        </div>
+                        
+                        <!-- Stats -->
+                        <div class="flex flex-wrap justify-center lg:justify-start gap-4 md:gap-6 mb-6 md:mb-8">
+                            <div class="text-center">
+                                <div class="text-2xl md:text-3xl font-bold text-[#0f5b5c]">25k+</div>
+                                <div class="text-xs md:text-sm text-gray-500">ATMs</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-2xl md:text-3xl font-bold text-[#0f5b5c]">37</div>
+                                <div class="text-xs md:text-sm text-gray-500">Banks</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-2xl md:text-3xl font-bold text-[#0f5b5c]">154</div>
+                                <div class="text-xs md:text-sm text-gray-500">Users Surveyed</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Status Legend -->
+                        <div class="flex flex-wrap justify-center lg:justify-start gap-4 md:gap-6 mb-6 md:mb-8">
+                            <div class="flex items-center gap-2">
+                                <span class="status-dot dot-green"></span>
+                                <span class="text-sm md:text-base text-gray-700 font-medium">In Service</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="status-dot dot-red"></span>
+                                <span class="text-sm md:text-base text-gray-700 font-medium">Out of Service</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="status-dot dot-gold"></span>
+                                <span class="text-sm md:text-base text-gray-700 font-medium">Maintenance</span>
+                            </div>
+                        </div>
+                        
+                        <!-- CTA Buttons -->
+                        <div class="flex flex-col sm:flex-row gap-3 md:gap-4 max-w-md mx-auto lg:mx-0">
+                            <button onclick="showTab('pricing')" class="btn-primary">
+                                View Plans <span class="text-lg md:text-xl">→</span>
+                            </button>
+                            <button onclick="showTab('map')" class="btn-outline">
+                                Try Live Map
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Right: Visual -->
+                    <div class="hidden lg:block lg:w-1/2">
+                        <div class="relative">
+                            <div class="absolute -top-10 -right-10 w-80 h-80 bg-[#0f5b5c]/5 rounded-full blur-3xl"></div>
+                            <div class="absolute -bottom-10 -left-10 w-80 h-80 bg-[#c8a45c]/5 rounded-full blur-3xl"></div>
+                            
+                            <div class="card-modern p-8 relative bg-white shadow-soft">
+                                <div class="flex items-center justify-between mb-6">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                                        <span class="text-xs font-medium text-gray-400">القاهرة الكبرى • Live</span>
+                                    </div>
+                                    <span class="text-xs bg-gray-100 px-3 py-1 rounded-full font-medium">24,862 ATMs</span>
+                                </div>
+                                
+                                <!-- Map preview with areas -->
+                                <div class="bg-[#f1f5f9] rounded-2xl p-5 mb-6 relative">
+                                    <div class="absolute top-2 left-2 text-[8px] bg-white/90 px-2 py-1 rounded-full">مصر الجديدة</div>
+                                    <div class="absolute top-2 right-2 text-[8px] bg-white/90 px-2 py-1 rounded-full">هليوبليس</div>
+                                    <div class="absolute bottom-2 left-2 text-[8px] bg-white/90 px-2 py-1 rounded-full">مدينة نصر</div>
+                                    <div class="absolute bottom-2 right-2 text-[8px] bg-white/90 px-2 py-1 rounded-full">جسر السويس</div>
+                                    <div class="grid grid-cols-3 gap-3">
+                                        <div class="aspect-square bg-white rounded-xl flex items-center justify-center">
+                                            <span class="map-marker in"></span>
+                                        </div>
+                                        <div class="aspect-square bg-white rounded-xl flex items-center justify-center">
+                                            <span class="map-marker out"></span>
+                                        </div>
+                                        <div class="aspect-square bg-white rounded-xl flex items-center justify-center">
+                                            <span class="map-marker maintenance"></span>
+                                        </div>
+                                        <div class="aspect-square bg-white rounded-xl flex items-center justify-center">
+                                            <span class="map-marker in"></span>
+                                        </div>
+                                        <div class="aspect-square bg-white rounded-xl flex items-center justify-center">
+                                            <span class="map-marker in"></span>
+                                        </div>
+                                        <div class="aspect-square bg-white rounded-xl flex items-center justify-center">
+                                            <span class="map-marker out"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="grid grid-cols-3 gap-4 text-center mb-6">
+                                    <div class="bg-[#f9fafc] rounded-xl p-3">
+                                        <div class="text-2xl font-bold text-[#1e293b]">6,786</div>
+                                        <div class="text-xs text-gray-400">NBE ATMs</div>
+                                    </div>
+                                    <div class="bg-[#f9fafc] rounded-xl p-3">
+                                        <div class="text-2xl font-bold text-[#1e293b]">28.5%</div>
+                                        <div class="text-xs text-gray-400">Market Share</div>
+                                    </div>
+                                    <div class="bg-[#f9fafc] rounded-xl p-3">
+                                        <div class="text-2xl font-bold text-[#1e293b]">+6.8%</div>
+                                        <div class="text-xs text-gray-400">Growth</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="text-xs text-gray-400 border-t border-gray-100 pt-4 text-center">
+                                    Based on Central Bank of Egypt data 2024-2025
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Problem Section -->
+        <section class="py-12 md:py-20 bg-[#f9fafc]">
+            <div class="container-custom">
+                <div class="text-center max-w-3xl mx-auto mb-8 md:mb-16">
+                    <span class="text-[#c8a45c] font-semibold text-xs md:text-sm uppercase tracking-wider">The Problem</span>
+                    <h2 class="text-2xl md:text-3xl lg:text-4xl font-bold text-[#1e293b] mt-3 md:mt-4 mb-4 md:mb-6">Why Egyptians Need CashUp</h2>
+                    <p class="text-sm md:text-base lg:text-lg text-gray-500 px-4">Based on surveys with 154 users and interviews with banking executives</p>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 max-w-4xl mx-auto">
+                    <div class="card-modern p-6 md:p-8 bg-white">
+                        <h3 class="text-lg md:text-xl font-bold text-[#1e293b] mb-4">Customer Pain Points</h3>
+                        <ul class="space-y-3">
+                            <li class="flex items-start gap-3">
+                                <span class="text-red-500 text-lg">•</span>
+                                <span class="text-sm md:text-base text-gray-600">88.5% never used an ATM locator app</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="text-red-500 text-lg">•</span>
+                                <span class="text-sm md:text-base text-gray-600">ATMs out of service or out of cash are #1 complaint</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="text-red-500 text-lg">•</span>
+                                <span class="text-sm md:text-base text-gray-600">No real-time status available from banks</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="text-red-500 text-lg">•</span>
+                                <span class="text-sm md:text-base text-gray-600">Long queues and wasted trips to multiple ATMs</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="text-red-500 text-lg">•</span>
+                                <span class="text-sm md:text-base text-gray-600">Uncertainty about ATM status in new areas</span>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="card-modern p-6 md:p-8 bg-white">
+                        <h3 class="text-lg md:text-xl font-bold text-[#1e293b] mb-4">Bank Challenges</h3>
+                        <ul class="space-y-3">
+                            <li class="flex items-start gap-3">
+                                <span class="text-[#0f5b5c] text-lg">•</span>
+                                <span class="text-sm md:text-base text-gray-600">High volume of customer complaints</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="text-[#0f5b5c] text-lg">•</span>
+                                <span class="text-sm md:text-base text-gray-600">Inefficient cash management</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="text-[#0f5b5c] text-lg">•</span>
+                                <span class="text-sm md:text-base text-gray-600">Limited visibility on ATM performance</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="text-[#0f5b5c] text-lg">•</span>
+                                <span class="text-sm md:text-base text-gray-600">Increased operational costs</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="text-[#0f5b5c] text-lg">•</span>
+                                <span class="text-sm md:text-base text-gray-600">Reputational damage from failed ATMs</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="text-center mt-8 md:mt-12">
+                    <button onclick="showTab('map')" class="btn-primary">
+                        See Live Solution
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Solution Features -->
+        <section class="py-12 md:py-20 bg-white">
+            <div class="container-custom">
+                <div class="text-center max-w-2xl mx-auto mb-8 md:mb-16">
+                    <span class="text-[#c8a45c] font-semibold text-xs md:text-sm uppercase tracking-wider">Our Solution</span>
+                    <h2 class="text-2xl md:text-3xl lg:text-4xl font-bold text-[#1e293b] mt-3 md:mt-4 mb-4 md:mb-6">Real-Time ATM Status Platform</h2>
+                    <p class="text-sm md:text-base lg:text-lg text-gray-500 px-4">Trusted by banks and customers across Egypt</p>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8">
+                    <div class="card-modern p-6 md:p-8 bg-white shadow-hover">
+                        <div class="w-12 h-12 md:w-14 md:h-14 bg-[#0f5b5c]/10 rounded-2xl flex items-center justify-center mb-4 md:mb-6">
+                            <span class="text-xl md:text-2xl text-[#0f5b5c]">📍</span>
+                        </div>
+                        <h3 class="text-lg md:text-xl font-bold text-[#1e293b] mb-2 md:mb-3">25,000+ ATMs</h3>
+                        <p class="text-sm md:text-base text-gray-500 mb-4">Real-time status for every ATM in Egypt. Working with NBE, CIB, HD Bank and more.</p>
+                        <div class="flex flex-wrap gap-2">
+                            <span class="badge badge-success">In Service</span>
+                            <span class="badge badge-error">Out of Service</span>
+                            <span class="badge badge-warning">Maintenance</span>
+                        </div>
+                    </div>
+                    
+                    <div class="card-modern p-6 md:p-8 bg-white shadow-hover">
+                        <div class="w-12 h-12 md:w-14 md:h-14 bg-[#c8a45c]/10 rounded-2xl flex items-center justify-center mb-4 md:mb-6">
+                            <span class="text-xl md:text-2xl text-[#c8a45c]">🗺️</span>
+                        </div>
+                        <h3 class="text-lg md:text-xl font-bold text-[#1e293b] mb-2 md:mb-3">All Cairo Areas</h3>
+                        <p class="text-sm md:text-base text-gray-500 mb-4">Complete coverage of Masr El Gedida, Nasr City, Gesr El Suez, Heliopolis and surrounding areas.</p>
+                        <div class="flex flex-wrap gap-2">
+                            <span class="area-tag">مصر الجديدة</span>
+                            <span class="area-tag">مدينة نصر</span>
+                            <span class="area-tag">جسر السويس</span>
+                        </div>
+                    </div>
+                    
+                    <div class="card-modern p-6 md:p-8 bg-white shadow-hover">
+                        <div class="w-12 h-12 md:w-14 md:h-14 bg-[#1e293b]/10 rounded-2xl flex items-center justify-center mb-4 md:mb-6">
+                            <span class="text-xl md:text-2xl text-[#1e293b]">📊</span>
+                        </div>
+                        <h3 class="text-lg md:text-xl font-bold text-[#1e293b] mb-2 md:mb-3">Bank Dashboard</h3>
+                        <p class="text-sm md:text-base text-gray-500 mb-4">For partner banks: ATM performance, cash management, and customer insights.</p>
+                        <span class="inline-block bg-[#c8a45c] text-white px-3 md:px-4 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-bold">
+                            B2B Solutions
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Interview Highlights -->
+        <section class="py-12 md:py-20 bg-[#f9fafc]">
+            <div class="container-custom">
+                <div class="text-center max-w-2xl mx-auto mb-8 md:mb-16">
+                    <span class="text-[#c8a45c] font-semibold text-xs md:text-sm uppercase tracking-wider">User Research</span>
+                    <h2 class="text-2xl md:text-3xl lg:text-4xl font-bold text-[#1e293b] mt-3 md:mt-4 mb-4 md:mb-6">What Our Users Say</h2>
+                    <p class="text-sm md:text-base lg:text-lg text-gray-500 px-4">Interviews with customers and banking executives</p>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 max-w-4xl mx-auto">
+                    <!-- Customer Interview -->
+                    <div class="card-modern p-6 md:p-8 bg-white">
+                        <div class="flex items-center gap-4 mb-4">
+                            <div class="w-12 h-12 bg-[#0f5b5c]/10 rounded-full flex items-center justify-center">
+                                <span class="text-xl">👤</span>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-[#1e293b]">Farid Mohamed</h3>
+                                <p class="text-xs text-gray-500">Engineering Student, 21 • Uses ATMs 2-3x weekly</p>
+                            </div>
+                        </div>
+                        <p class="text-sm md:text-base text-gray-600 italic">"I frequently find ATMs out of cash or out of service in Nasr City. An app showing working ATMs would be a huge time saver."</p>
+                        <div class="mt-4 flex gap-2">
+                            <span class="badge badge-success">NBE</span>
+                            <span class="badge badge-success">CIB</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Customer Interview 2 -->
+                    <div class="card-modern p-6 md:p-8 bg-white">
+                        <div class="flex items-center gap-4 mb-4">
+                            <div class="w-12 h-12 bg-[#0f5b5c]/10 rounded-full flex items-center justify-center">
+                                <span class="text-xl">👤</span>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-[#1e293b]">Samira Ali</h3>
+                                <p class="text-xs text-gray-500">Delivery Driver, 28 • Covers Masr Gedida & Heliopolis</p>
+                            </div>
+                        </div>
+                        <p class="text-sm md:text-base text-gray-600 italic">"ATMs running out of cash on weekends in Heliopolis is a major problem. I need reliable info across all areas I work in."</p>
+                        <div class="mt-4 flex gap-2">
+                            <span class="badge badge-success">QNB</span>
+                            <span class="badge badge-success">ADIB</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Bank Interview -->
+                    <div class="card-modern p-6 md:p-8 bg-white">
+                        <div class="flex items-center gap-4 mb-4">
+                            <div class="w-12 h-12 bg-[#c8a45c]/10 rounded-full flex items-center justify-center">
+                                <span class="text-xl">🏦</span>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-[#1e293b]">Nourhan Lala</h3>
+                                <p class="text-xs text-gray-500">Fintechs Collaboration Deputy Manager, NBE</p>
+                            </div>
+                        </div>
+                        <p class="text-sm md:text-base text-gray-600 italic">"A platform showing real-time ATM status across all Cairo areas would save customers time, reduce complaints, and help us plan maintenance better."</p>
+                    </div>
+                    
+                    <!-- Bank Interview 2 -->
+                    <div class="card-modern p-6 md:p-8 bg-white">
+                        <div class="flex items-center gap-4 mb-4">
+                            <div class="w-12 h-12 bg-[#c8a45c]/10 rounded-full flex items-center justify-center">
+                                <span class="text-xl">🏦</span>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-[#1e293b]">Hanin Emad Eldin</h3>
+                                <p class="text-xs text-gray-500">IT Operational Risk Specialist, HD Bank</p>
+                            </div>
+                        </div>
+                        <p class="text-sm md:text-base text-gray-600 italic">"Real-time ATM monitoring for Gesr El Suez and surrounding areas would help us respond faster to issues and reduce customer complaints."</p>
+                    </div>
+                </div>
+                
+                <div class="text-center mt-8 md:mt-12">
+                    <button onclick="showTab('map')" class="btn-primary">
+                        See Live Demo
+                    </button>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- PRICING CONTENT -->
+    <div id="pricingContent" class="hidden">
+        <section class="py-12 md:py-20">
+            <div class="container-custom">
+                <div class="text-center max-w-2xl mx-auto mb-8 md:mb-16">
+                    <span class="text-[#c8a45c] font-semibold text-xs md:text-sm uppercase tracking-wider">Simple Pricing</span>
+                    <h2 class="text-2xl md:text-3xl lg:text-4xl font-bold text-[#1e293b] mt-3 md:mt-4 mb-4 md:mb-6">Plans for Everyone</h2>
+                    <p class="text-sm md:text-base lg:text-lg text-gray-500 px-4">7-day free trial on all plans • No credit card required • Cancel anytime</p>
+                </div>
+                
+                <!-- Consumer Plans -->
+                <div class="mb-12 md:mb-20">
+                    <h3 class="text-xl md:text-2xl font-bold text-[#1e293b] mb-6 md:mb-8 text-center">For Individuals</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 max-w-5xl mx-auto">
+                        <!-- Student Plan -->
+                        <div class="pricing-card card-modern p-6 md:p-8 bg-white">
+                            <div class="mb-4">
+                                <span class="text-sm font-semibold text-[#c8a45c] uppercase">Student</span>
+                                <h4 class="text-2xl md:text-3xl font-bold text-[#1e293b] mt-2">₤10<span class="text-sm font-normal text-gray-400">/month</span></h4>
+                                <p class="text-xs text-gray-500 mt-1">For students with valid ID</p>
+                            </div>
+                            <ul class="space-y-3 mb-6">
+                                <li class="flex items-center gap-2 text-sm">
+                                    <span class="text-green-500">✓</span> Full access to all ATMs
+                                </li>
+                                <li class="flex items-center gap-2 text-sm">
+                                    <span class="text-green-500">✓</span> All Cairo areas covered
+                                </li>
+                                <li class="flex items-center gap-2 text-sm">
+                                    <span class="text-green-500">✓</span> Real-time status updates
+                                </li>
+                                <li class="flex items-center gap-2 text-sm">
+                                    <span class="text-green-500">✓</span> Basic alerts
+                                </li>
+                                <li class="flex items-center gap-2 text-sm text-gray-400">
+                                    <span class="text-gray-300">✗</span> No priority support
+                                </li>
+                            </ul>
+                            <button onclick="showTab('map')" class="w-full btn-outline text-sm">Start 7-day trial</button>
+                        </div>
+                        
+                        <!-- Individual Plan - MOST POPULAR -->
+                        <div class="pricing-card recommended card-modern p-6 md:p-8 bg-white">
+                            <div class="mb-4">
+                                <span class="text-sm font-semibold text-[#c8a45c] uppercase">Individual</span>
+                                <h4 class="text-2xl md:text-3xl font-bold text-[#1e293b] mt-2">₤20<span class="text-sm font-normal text-gray-400">/month</span></h4>
+                                <p class="text-xs text-gray-500 mt-1">Perfect for regular users</p>
+                            </div>
+                            <ul class="space-y-3 mb-6">
+                                <li class="flex items-center gap-2 text-sm">
+                                    <span class="text-green-500">✓</span> Full access to all ATMs
+                                </li>
+                                <li class="flex items-center gap-2 text-sm">
+                                    <span class="text-green-500">✓</span> All Cairo areas covered
+                                </li>
+                                <li class="flex items-center gap-2 text-sm">
+                                    <span class="text-green-500">✓</span> Real-time status updates
+                                </li>
+                                <li class="flex items-center gap-2 text-sm">
+                                    <span class="text-green-500">✓</span> Smart alerts & notifications
+                                </li>
+                                <li class="flex items-center gap-2 text-sm">
+                                    <span class="text-green-500">✓</span> Email support
+                                </li>
+                            </ul>
+                            <button onclick="showTab('map')" class="w-full btn-primary text-sm">Start 7-day trial</button>
+                        </div>
+                        
+                        <!-- Family Plan -->
+                        <div class="pricing-card card-modern p-6 md:p-8 bg-white">
+                            <div class="mb-4">
+                                <span class="text-sm font-semibold text-[#c8a45c] uppercase">Family</span>
+                                <h4 class="text-2xl md:text-3xl font-bold text-[#1e293b] mt-2">₤35<span class="text-sm font-normal text-gray-400">/month</span></h4>
+                                <p class="text-xs text-gray-500 mt-1">Up to 5 family members</p>
+                            </div>
+                            <ul class="space-y-3 mb-6">
+                                <li class="flex items-center gap-2 text-sm">
+                                    <span class="text-green-500">✓</span> Everything in Individual
+                                </li>
+                                <li class="flex items-center gap-2 text-sm">
+                                    <span class="text-green-500">✓</span> 5 separate accounts
+                                </li>
+                                <li class="flex items-center gap-2 text-sm">
+                                    <span class="text-green-500">✓</span> Family location sharing
+                                </li>
+                                <li class="flex items-center gap-2 text-sm">
+                                    <span class="text-green-500">✓</span> Priority support
+                                </li>
+                                <li class="flex items-center gap-2 text-sm">
+                                    <span class="text-green-500">✓</span> 20% discount
+                                </li>
+                            </ul>
+                            <button onclick="showTab('map')" class="w-full btn-outline text-sm">Start 7-day trial</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Business Plans -->
+                <div class="mb-12 md:mb-20">
+                    <h3 class="text-xl md:text-2xl font-bold text-[#1e293b] mb-6 md:mb-8 text-center">For Businesses & Banks</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 max-w-5xl mx-auto">
+                        <!-- Small Business -->
+                        <div class="pricing-card card-modern p-6 md:p-8 bg-white">
+                            <div class="mb-4">
+                                <span class="text-sm font-semibold text-[#c8a45c] uppercase">Small Business</span>
+                                <h4 class="text-2xl md:text-3xl font-bold text-[#1e293b] mt-2">₤50<span class="text-sm font-normal text-gray-400">/month</span></h4>
+                                <p class="text-xs text-gray-500 mt-1">For small companies</p>
+                            </div>
+                            <ul class="space-y-3 mb-6">
+                                <li class="flex items-center gap-2 text-sm">
+                                    <span class="text-green-500">✓</span> 10 team accounts
+                                </li>
+                                <li class="flex items-center gap-2 text-sm">
+                                    <span class="text-green-500">✓</span> Basic analytics
+                                </li>
+                                <li class="flex items-center gap-2 text-sm">
+                                    <span class="text-green-500">✓</span> API access (limited)
+                                </li>
+                                <li class="flex items-center gap-2 text-sm">
+                                    <span class="text-green-500">✓</span> Business hours support
+                                </li>
+                            </ul>
+                            <button class="w-full btn-outline text-sm">Contact Sales</button>
+                        </div>
+                        
+                        <!-- Enterprise -->
+                        <div class="pricing-card card-modern p-6 md:p-8 bg-white">
+                            <div class="mb-4">
+                                <span class="text-sm font-semibold text-[#c8a45c] uppercase">Enterprise</span>
+                                <h4 class="text-2xl md:text-3xl font-bold text-[#1e293b] mt-2">Custom</h4>
+                                <p class="text-xs text-gray-500 mt-1">For large organizations</p>
+                            </div>
+                            <ul class="space-y-3 mb-6">
+                                <li class="flex items-center gap-2 text-sm">
+                                    <span class="text-green-500">✓</span> Unlimited accounts
+                                </li>
+                                <li class="flex items-center gap-2 text-sm">
+                                    <span class="text-green-500">✓</span> Advanced analytics dashboard
+                                </li>
+                                <li class="flex items-center gap-2 text-sm">
+                                    <span class="text-green-500">✓</span> Full API access
+                                </li>
+                                <li class="flex items-center gap-2 text-sm">
+                                    <span class="text-green-500">✓</span> Dedicated account manager
+                                </li>
+                                <li class="flex items-center gap-2 text-sm">
+                                    <span class="text-green-500">✓</span> 24/7 priority support
+                                </li>
+                                <li class="flex items-center gap-2 text-sm">
+                                    <span class="text-green-500">✓</span> Custom integrations
+                                </li>
+                            </ul>
+                            <button class="w-full btn-outline text-sm">Contact Sales</button>
+                        </div>
+                        
+                        <!-- Bank Partner -->
+                        <div class="pricing-card card-modern p-6 md:p-8 bg-white bg-gradient-to-br from-[#f9fafc] to-white">
+                            <div class="mb-4">
+                                <span class="text-sm font-semibold text-[#c8a45c] uppercase">Bank Partner</span>
+                                <h4 class="text-2xl md:text-3xl font-bold text-[#1e293b] mt-2">Partnership</h4>
+                                <p class="text-xs text-gray-500 mt-1">For banks & financial institutions</p>
+                            </div>
+                            <ul class="space-y-3 mb-6">
+                                <li class="flex items-center gap-2 text-sm">
+                                    <span class="text-green-500">✓</span> White-label solution
+                                </li>
+                                <li class="flex items-center gap-2 text-sm">
+                                    <span class="text-green-500">✓</span> ATM performance monitoring
+                                </li>
+                                <li class="flex items-center gap-2 text-sm">
+                                    <span class="text-green-500">✓</span> Cash management insights
+                                </li>
+                                <li class="flex items-center gap-2 text-sm">
+                                    <span class="text-green-500">✓</span> Customer complaint reduction
+                                </li>
+                                <li class="flex items-center gap-2 text-sm">
+                                    <span class="text-green-500">✓</span> Real-time operational data
+                                </li>
+                                <li class="flex items-center gap-2 text-sm">
+                                    <span class="text-green-500">✓</span> Direct integration with your systems
+                                </li>
+                            </ul>
+                            <button class="w-full bg-[#c8a45c] text-white py-2 px-4 rounded-full text-sm font-medium hover:bg-[#b68b40] transition">
+                                Partner With Us
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Trust Badges -->
+                <div class="text-center">
+                    <div class="flex flex-wrap justify-center gap-4 md:gap-8 items-center">
+                        <span class="text-xs text-gray-400">Trusted by:</span>
+                        <span class="text-sm font-semibold text-gray-600">NBE</span>
+                        <span class="text-sm font-semibold text-gray-600">CIB</span>
+                        <span class="text-sm font-semibold text-gray-600">HD Bank</span>
+                        <span class="text-sm font-semibold text-gray-600">QNB</span>
+                        <span class="text-sm font-semibold text-gray-600">Banque Misr</span>
+                    </div>
+                    <p class="text-xs text-gray-400 mt-6">All plans include 7-day free trial • No credit card required • Cancel anytime</p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- MAP CONTENT with ALL AREAS -->
+    <div id="mapContent" class="hidden">
+        <div class="container-custom py-6 md:py-12">
+            <div class="flex flex-col lg:flex-row gap-6 md:gap-8">
+                <!-- Sidebar -->
+                <div class="w-full lg:w-2/5 space-y-4 md:space-y-6">
+                    <!-- Header -->
+                    <div>
+                        <h2 class="text-2xl md:text-3xl font-bold text-[#1e293b]">Live ATM Status</h2>
+                        <p class="text-[#0f5b5c] font-medium flex items-center gap-1 mt-1 text-sm md:text-base">
+                            <span>📍</span> Greater Cairo • مصر الجديدة • مدينة نصر • جسر السويس • هليوبليس
+                        </p>
+                    </div>
+                    
+                    <!-- GPS Status -->
+                    <div id="gpsStatus" class="bg-blue-50 border border-blue-200 rounded-xl p-3 flex items-center gap-2">
+                        <div class="w-2 h-2 bg-blue-500 rounded-full gps-loading"></div>
+                        <span class="text-xs md:text-sm text-blue-700">GPS: جاري تحديد موقعك في القاهرة...</span>
+                    </div>
+                    
+                    <!-- Pricing note -->
+                    <div class="bg-[#f9fafc] rounded-xl p-3 md:p-4 border border-gray-200">
+                        <span class="font-semibold text-[#c8a45c] text-sm">PROTOTYPE:</span>
+                        <span class="text-gray-600 text-xs md:text-sm ml-2">7-day free trial • ثم ₤20 EGP/month بعد التجربة</span>
+                    </div>
+                    
+                    <!-- Area Quick Filters -->
+                    <div class="flex gap-2 overflow-x-auto pb-2">
+                        <button onclick="filterArea('all')" class="area-tag active" id="areaAll">All Areas</button>
+                        <button onclick="filterArea('masrgedida')" class="area-tag" id="areaMasrGedida">مصر الجديدة</button>
+                        <button onclick="filterArea('nasrcity')" class="area-tag" id="areaNasrCity">مدينة نصر</button>
+                        <button onclick="filterArea('gesrsuez')" class="area-tag" id="areaGesrSuez">جسر السويس</button>
+                        <button onclick="filterArea('heliopolis')" class="area-tag" id="areaHeliopolis">هليوبليس</button>
+                        <button onclick="filterArea('other')" class="area-tag" id="areaOther">مناطق أخرى</button>
+                    </div>
+                    
+                    <!-- Bank Filters -->
+                    <div class="flex gap-2 overflow-x-auto pb-2">
+                        <button id="filterAll" class="px-4 py-2 bg-[#0f5b5c] text-white rounded-full text-xs md:text-sm font-bold whitespace-nowrap">All Banks</button>
+                        <button id="filterNBE" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-full text-xs md:text-sm font-bold whitespace-nowrap hover:bg-gray-200">NBE</button>
+                        <button id="filterCIB" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-full text-xs md:text-sm font-bold whitespace-nowrap hover:bg-gray-200">CIB</button>
+                        <button id="filterHD" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-full text-xs md:text-sm font-bold whitespace-nowrap hover:bg-gray-200">HD</button>
+                        <button id="filterQNB" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-full text-xs md:text-sm font-bold whitespace-nowrap hover:bg-gray-200">QNB</button>
+                        <button id="filterBanqueMisr" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-full text-xs md:text-sm font-bold whitespace-nowrap hover:bg-gray-200">Banque Misr</button>
+                    </div>
+                    
+                    <!-- Legend -->
+                    <div class="flex flex-wrap gap-3 md:gap-4 text-xs md:text-sm bg-white p-3 rounded-xl border border-gray-100">
+                        <span class="flex items-center gap-1 md:gap-2"><span class="w-2 h-2 md:w-3 md:h-3 bg-green-500 rounded-full"></span> In Service</span>
+                        <span class="flex items-center gap-1 md:gap-2"><span class="w-2 h-2 md:w-3 md:h-3 bg-red-500 rounded-full"></span> Out of Service</span>
+                        <span class="flex items-center gap-1 md:gap-2"><span class="w-2 h-2 md:w-3 md:h-3 bg-[#c8a45c] rounded-full"></span> Maintenance</span>
+                        <span class="flex items-center gap-1 md:gap-2"><span class="w-2 h-2 md:w-3 md:h-3 bg-blue-500 rounded-full"></span> Your Location</span>
+                    </div>
+                    
+                    <!-- ATM List -->
+                    <div id="atmList" class="atm-list space-y-3"></div>
+                    
+                    <!-- GPS Button -->
+                    <button id="useLocationBtn" class="w-full bg-[#1e293b] text-white py-3 rounded-xl font-medium hover:bg-[#2d3a4f] transition flex items-center justify-center gap-2 text-sm md:text-base">
+                        <span>📍</span> تحديث موقعي (Update My Location)
+                    </button>
+                </div>
+                
+                <!-- Map -->
+                <div class="w-full lg:w-3/5">
+                    <div class="relative map-container w-full bg-[#f1f5f9] rounded-2xl md:rounded-3xl border-2 md:border-4 border-white shadow-xl overflow-hidden">
+                        <!-- Grid background -->
+                        <div class="absolute inset-0" style="background-image: 
+                            linear-gradient(#e2e8f0 1px, transparent 1px),
+                            linear-gradient(90deg, #e2e8f0 1px, transparent 1px);
+                            background-size: 20px 20px; opacity: 0.5;">
+                        </div>
+                        
+                        <!-- Area labels -->
+                        <div class="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full text-xs shadow-md border border-gray-100">
+                            <span class="font-medium text-[#0f5b5c]">مصر الجديدة</span>
+                        </div>
+                        <div class="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full text-xs shadow-md border border-gray-100">
+                            <span class="font-medium text-[#0f5b5c]">هليوبليس</span>
+                        </div>
+                        <div class="absolute bottom-20 left-4 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full text-xs shadow-md border border-gray-100">
+                            <span class="font-medium text-[#0f5b5c]">مدينة نصر</span>
+                        </div>
+                        <div class="absolute bottom-20 right-4 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full text-xs shadow-md border border-gray-100">
+                            <span class="font-medium text-[#0f5b5c]">جسر السويس</span>
+                        </div>
+                        
+                        <!-- Markers container -->
+                        <div id="mapMarkers" class="absolute inset-0"></div>
+                        
+                        <!-- User marker -->
+                        <div id="userMarker" class="absolute hidden map-marker user" style="top: 50%; left: 50%; transform: translate(-50%, -50%);"></div>
+                        
+                        <!-- Live badge -->
+                        <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2">
+                            <span class="bg-white px-3 md:px-6 py-1.5 md:py-2 rounded-full text-xs font-bold shadow-lg flex items-center gap-1 md:gap-2 border border-gray-100">
+                                <span class="w-1.5 h-1.5 md:w-2 md:h-2 bg-green-500 rounded-full animate-ping"></span>
+                                LIVE • 5,000+ ATMs • 37 banks
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
+
+    <!-- ABOUT CONTENT (placeholder) -->
+    <div id="aboutContent" class="hidden">
+        <section class="py-12 md:py-20">
+            <div class="container-custom">
+                <div class="max-w-3xl mx-auto text-center">
+                    <h2 class="text-2xl md:text-3xl lg:text-4xl font-bold text-[#1e293b] mb-6">About CashUp</h2>
+                    <p class="text-base md:text-lg text-gray-600 mb-8">Egypt's first real-time ATM status platform, built on research with 154 users and partnerships with major banks including NBE, CIB, and HD Bank.</p>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
+                        <div>
+                            <div class="text-2xl md:text-3xl font-bold text-[#0f5b5c]">2024</div>
+                            <div class="text-xs text-gray-500">Founded</div>
+                        </div>
+                        <div>
+                            <div class="text-2xl md:text-3xl font-bold text-[#0f5b5c]">37</div>
+                            <div class="text-xs text-gray-500">Bank Partners</div>
+                        </div>
+                        <div>
+                            <div class="text-2xl md:text-3xl font-bold text-[#0f5b5c]">25k+</div>
+                            <div class="text-xs text-gray-500">ATMs</div>
+                        </div>
+                        <div>
+                            <div class="text-2xl md:text-3xl font-bold text-[#0f5b5c]">154</div>
+                            <div class="text-xs text-gray-500">Users Surveyed</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- FEATURES CONTENT (placeholder) -->
+    <div id="featuresContent" class="hidden">
+        <section class="py-12 md:py-20">
+            <div class="container-custom">
+                <div class="max-w-3xl mx-auto text-center">
+                    <h2 class="text-2xl md:text-3xl lg:text-4xl font-bold text-[#1e293b] mb-6">Features</h2>
+                    <p class="text-base md:text-lg text-gray-600 mb-8">Everything you need to find working ATMs instantly.</p>
+                </div>
+            </div>
+        </section>
+    </div>
+
     <script>
-        function initMap() {
-            const map = new google.maps.Map(document.getElementById("map"), {
-                zoom: 12,
-                center: { lat: 30.0626, lng: 31.2497 }, // Centered at Cairo
+        // ATM data for Greater Cairo - covering all areas
+        const atms = [
+            // Masr El Gedida (مصر الجديدة)
+            { id: 1, bank: 'NBE', name: 'NBE - Masr Gedida', area: 'masrgedida', lat: 30.085, lng: 31.329, status: 'in' },
+            { id: 2, bank: 'CIB', name: 'CIB - Gesr Suez', area: 'masrgedida', lat: 30.082, lng: 31.332, status: 'out' },
+            { id: 3, bank: 'HD', name: 'HD - Khalifa Mamoun', area: 'masrgedida', lat: 30.088, lng: 31.335, status: 'in' },
+            { id: 4, bank: 'QNB', name: 'QNB - Masr Gedida', area: 'masrgedida', lat: 30.083, lng: 31.326, status: 'maintenance' },
+            { id: 5, bank: 'BanqueMisr', name: 'Banque Misr - Gesr Suez', area: 'masrgedida', lat: 30.086, lng: 31.331, status: 'in' },
+            
+            // Nasr City (مدينة نصر)
+            { id: 6, bank: 'NBE', name: 'NBE - Makram Ebeid', area: 'nasrcity', lat: 30.060, lng: 31.335, status: 'in' },
+            { id: 7, bank: 'NBE', name: 'NBE - Abbas El Akkad', area: 'nasrcity', lat: 30.058, lng: 31.329, status: 'out' },
+            { id: 8, bank: 'NBE', name: 'NBE - Hassan El Mamoun', area: 'nasrcity', lat: 30.063, lng: 31.342, status: 'maintenance' },
+            { id: 9, bank: 'CIB', name: 'CIB - Makram Ebeid', area: 'nasrcity', lat: 30.061, lng: 31.336, status: 'in' },
+            { id: 10, bank: 'CIB', name: 'CIB - Tayaran', area: 'nasrcity', lat: 30.065, lng: 31.347, status: 'out' },
+            { id: 11, bank: 'HD', name: 'HD - Nasr Road', area: 'nasrcity', lat: 30.066, lng: 31.340, status: 'out' },
+            { id: 12, bank: 'QNB', name: 'QNB - Nasr City', area: 'nasrcity', lat: 30.062, lng: 31.338, status: 'in' },
+            
+            // Gesr El Suez (جسر السويس)
+            { id: 13, bank: 'CIB', name: 'CIB - Gesr Suez', area: 'gesrsuez', lat: 30.075, lng: 31.345, status: 'in' },
+            { id: 14, bank: 'NBE', name: 'NBE - Suez Road', area: 'gesrsuez', lat: 30.072, lng: 31.348, status: 'in' },
+            { id: 15, bank: 'HD', name: 'HD - Suez Bridge', area: 'gesrsuez', lat: 30.078, lng: 31.342, status: 'maintenance' },
+            { id: 16, bank: 'BanqueMisr', name: 'Banque Misr - Suez', area: 'gesrsuez', lat: 30.073, lng: 31.350, status: 'out' },
+            
+            // Heliopolis (هليوبليس)
+            { id: 17, bank: 'NBE', name: 'NBE - Heliopolis', area: 'heliopolis', lat: 30.095, lng: 31.335, status: 'in' },
+            { id: 18, bank: 'CIB', name: 'CIB - Heliopolis', area: 'heliopolis', lat: 30.098, lng: 31.332, status: 'in' },
+            { id: 19, bank: 'HD', name: 'HD - Heliopolis', area: 'heliopolis', lat: 30.092, lng: 31.338, status: 'maintenance' },
+            { id: 20, bank: 'QNB', name: 'QNB - Heliopolis', area: 'heliopolis', lat: 30.096, lng: 31.330, status: 'in' },
+            
+            // Additional surrounding areas
+            { id: 21, bank: 'NBE', name: 'NBE - Sheraton', area: 'other', lat: 30.070, lng: 31.355, status: 'in' },
+            { id: 22, bank: 'CIB', name: 'CIB - City Stars', area: 'other', lat: 30.068, lng: 31.345, status: 'in' },
+            { id: 23, bank: 'HD', name: 'HD - City Stars', area: 'other', lat: 30.069, lng: 31.346, status: 'out' },
+            { id: 24, bank: 'BanqueMisr', name: 'Banque Misr - Sheraton', area: 'other', lat: 30.071, lng: 31.354, status: 'in' }
+        ];
+
+        const statusText = { 'in': 'In Service', 'out': 'Out of Service', 'maintenance': 'Maintenance' };
+        let currentFilter = 'All';
+        let currentArea = 'all';
+        let userLocationSet = false;
+
+        function getAreaName(area) {
+            const names = {
+                'masrgedida': 'مصر الجديدة',
+                'nasrcity': 'مدينة نصر',
+                'gesrsuez': 'جسر السويس',
+                'heliopolis': 'هليوبليس',
+                'other': 'مناطق أخرى',
+                'all': 'All Areas'
+            };
+            return names[area] || area;
+        }
+
+        function renderATMs(filter = 'All', area = 'all') {
+            const listContainer = document.getElementById('atmList');
+            const markersContainer = document.getElementById('mapMarkers');
+            
+            let filtered = atms;
+            if (filter !== 'All') {
+                filtered = filtered.filter(atm => atm.bank === filter);
+            }
+            if (area !== 'all') {
+                filtered = filtered.filter(atm => atm.area === area);
+            }
+
+            listContainer.innerHTML = filtered.map(atm => `
+                <div class="bg-white p-3 md:p-5 rounded-xl border border-gray-100 flex justify-between items-center cursor-pointer hover:border-[#c8a45c] transition-all shadow-sm" onclick="highlightATM(${atm.id})">
+                    <div>
+                        <p class="text-xs font-semibold text-${atm.status === 'in' ? 'green' : atm.status === 'out' ? 'red' : 'yellow'}-600 mb-1">${atm.bank}</p>
+                        <h4 class="font-medium text-[#1e293b] text-sm md:text-base">${atm.name}</h4>
+                        <p class="text-xs text-gray-400 mt-1">${getAreaName(atm.area)}</p>
+                    </div>
+                    <span class="badge badge-${atm.status === 'in' ? 'success' : atm.status === 'out' ? 'error' : 'warning'}">${statusText[atm.status]}</span>
+                </div>
+            `).join('');
+
+            markersContainer.innerHTML = filtered.map(atm => {
+                // Adjust map positioning based on area
+                let baseLat = 30.07;
+                let baseLng = 31.34;
+                const top = 10 + (atm.lat - baseLat) * 2500;
+                const left = 10 + (atm.lng - baseLng) * 2500;
+                return `<div id="marker-${atm.id}" class="absolute map-marker ${atm.status}" style="top: ${Math.min(90, Math.max(5, top))}%; left: ${Math.min(90, Math.max(5, left))}%; transform: translate(-50%, -50%);" onclick="highlightATM(${atm.id})" title="${atm.name} - ${statusText[atm.status]}"></div>`;
+            }).join('');
+        }
+
+        function filterArea(area) {
+            currentArea = area;
+            renderATMs(currentFilter, area);
+            
+            // Update area tag styles
+            document.querySelectorAll('[onclick^="filterArea"]').forEach(btn => {
+                btn.classList.remove('active');
             });
-            const locations = [
-                { lat: 30.0595, lng: 31.2765, name: "Nasr City - Location A" },
-                { lat: 30.0580, lng: 31.3050, name: "Nasr City - Location B" },
-                { lat: 30.0128, lng: 31.4810, name: "New Cairo - Location A" },
-                { lat: 29.9652, lng: 31.2570, name: "Maadi - Location A" },
-                { lat: 29.9792, lng: 31.2065, name: "Gezira - Location A" },
-            ];
-            locations.forEach((location) => {
-                new google.maps.Marker({
-                    position: { lat: location.lat, lng: location.lng },
-                    map: map,
-                    title: location.name,
-                });
+            if (area === 'all') document.getElementById('areaAll').classList.add('active');
+            if (area === 'masrgedida') document.getElementById('areaMasrGedida').classList.add('active');
+            if (area === 'nasrcity') document.getElementById('areaNasrCity').classList.add('active');
+            if (area === 'gesrsuez') document.getElementById('areaGesrSuez').classList.add('active');
+            if (area === 'heliopolis') document.getElementById('areaHeliopolis').classList.add('active');
+            if (area === 'other') document.getElementById('areaOther').classList.add('active');
+        }
+
+        function highlightATM(id) {
+            document.querySelectorAll('.map-marker').forEach(m => m.style.border = '2px solid white');
+            const marker = document.getElementById(`marker-${id}`);
+            if (marker) {
+                marker.style.border = '3px solid #c8a45c';
+                marker.style.transform = 'translate(-50%, -50%) scale(1.3)';
+                setTimeout(() => marker.style.transform = 'translate(-50%, -50%) scale(1)', 1000);
+            }
+        }
+
+        // REAL GPS FUNCTION
+        function getUserLocation() {
+            const gpsStatus = document.getElementById('gpsStatus');
+            const userMarker = document.getElementById('userMarker');
+            
+            if (navigator.geolocation) {
+                gpsStatus.innerHTML = '<div class="w-2 h-2 bg-blue-500 rounded-full gps-loading"></div><span class="text-xs md:text-sm text-blue-700">GPS: جاري تحديد موقعك في القاهرة...</span>';
+                
+                navigator.geolocation.getCurrentPosition(
+                    // Success
+                    (position) => {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        
+                        // Simulate Cairo area detection
+                        let area = '';
+                        // Rough area detection based on coordinates (for prototype)
+                        if (lat > 30.09) area = 'heliopolis';
+                        else if (lat > 30.07 && lat < 30.09) area = 'masrgedida';
+                        else if (lat > 30.06 && lat < 30.07) area = 'nasrcity';
+                        else if (lng > 31.34) area = 'gesrsuez';
+                        else area = 'other';
+                        
+                        gpsStatus.innerHTML = `<div class="w-2 h-2 bg-green-500 rounded-full"></div><span class="text-xs md:text-sm text-green-700">GPS: تم تحديد موقعك في ${getAreaName(area)}</span>`;
+                        
+                        // Show user marker
+                        userMarker.style.display = 'block';
+                        
+                        // Position marker based on actual coordinates (simplified for prototype)
+                        const mapTop = 20 + (lat - 30.05) * 2000;
+                        const mapLeft = 20 + (lng - 31.32) * 2000;
+                        userMarker.style.top = Math.min(85, Math.max(5, mapTop)) + '%';
+                        userMarker.style.left = Math.min(85, Math.max(5, mapLeft)) + '%';
+                        
+                        userLocationSet = true;
+                        
+                        // Auto-filter to area
+                        filterArea(area);
+                        
+                        // Show nearby ATMs count
+                        const nearbyCount = atms.filter(atm => atm.area === area).length;
+                        setTimeout(() => {
+                            alert(`📍 تم العثور على ${nearbyCount} ATM بالقرب من موقعك في ${getAreaName(area)}`);
+                        }, 500);
+                    },
+                    // Error
+                    (error) => {
+                        gpsStatus.innerHTML = '<div class="w-2 h-2 bg-red-500 rounded-full"></div><span class="text-xs md:text-sm text-red-700">GPS: تعذر تحديد الموقع. يرجى المحاولة مرة أخرى.</span>';
+                        console.error('GPS Error:', error);
+                    },
+                    // Options
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 0
+                    }
+                );
+            } else {
+                gpsStatus.innerHTML = '<div class="w-2 h-2 bg-red-500 rounded-full"></div><span class="text-xs md:text-sm text-red-700">GPS: متصفحك لا يدعم تحديد الموقع</span>';
+            }
+        }
+
+        // Filter buttons
+        document.getElementById('filterAll')?.addEventListener('click', () => { 
+            currentFilter = 'All'; 
+            renderATMs('All', currentArea); 
+            updateFilterButtons('All'); 
+        });
+        
+        document.getElementById('filterNBE')?.addEventListener('click', () => { 
+            currentFilter = 'NBE'; 
+            renderATMs('NBE', currentArea); 
+            updateFilterButtons('NBE'); 
+        });
+        
+        document.getElementById('filterCIB')?.addEventListener('click', () => { 
+            currentFilter = 'CIB'; 
+            renderATMs('CIB', currentArea); 
+            updateFilterButtons('CIB'); 
+        });
+        
+        document.getElementById('filterHD')?.addEventListener('click', () => { 
+            currentFilter = 'HD'; 
+            renderATMs('HD', currentArea); 
+            updateFilterButtons('HD'); 
+        });
+        
+        document.getElementById('filterQNB')?.addEventListener('click', () => { 
+            currentFilter = 'QNB'; 
+            renderATMs('QNB', currentArea); 
+            updateFilterButtons('QNB'); 
+        });
+        
+        document.getElementById('filterBanqueMisr')?.addEventListener('click', () => { 
+            currentFilter = 'BanqueMisr'; 
+            renderATMs('BanqueMisr', currentArea); 
+            updateFilterButtons('BanqueMisr'); 
+        });
+
+        function updateFilterButtons(active) {
+            ['All', 'NBE', 'CIB', 'HD', 'QNB', 'BanqueMisr'].forEach(f => {
+                const btn = document.getElementById(`filter${f}`);
+                if (btn) {
+                    if (f === active) {
+                        btn.classList.remove('bg-gray-100', 'text-gray-700');
+                        btn.classList.add('bg-[#0f5b5c]', 'text-white');
+                    } else {
+                        btn.classList.remove('bg-[#0f5b5c]', 'text-white');
+                        btn.classList.add('bg-gray-100', 'text-gray-700');
+                    }
+                }
             });
         }
+
+        // GPS button
+        document.getElementById('useLocationBtn')?.addEventListener('click', getUserLocation);
+
+        // Mobile menu
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileMenu');
+            menu.classList.toggle('show');
+        }
+
+        // Tab switching
+        function showTab(tab) {
+            const home = document.getElementById('homeContent');
+            const features = document.getElementById('featuresContent');
+            const pricing = document.getElementById('pricingContent');
+            const map = document.getElementById('mapContent');
+            const about = document.getElementById('aboutContent');
+            
+            // Hide all
+            home.classList.add('hidden');
+            features.classList.add('hidden');
+            pricing.classList.add('hidden');
+            map.classList.add('hidden');
+            about.classList.add('hidden');
+            
+            // Show selected
+            if (tab === 'home') home.classList.remove('hidden');
+            if (tab === 'features') features.classList.remove('hidden');
+            if (tab === 'pricing') pricing.classList.remove('hidden');
+            if (tab === 'map') {
+                map.classList.remove('hidden');
+                // Auto-request GPS when map is shown
+                setTimeout(() => {
+                    if (!userLocationSet) {
+                        getUserLocation();
+                    }
+                }, 1000);
+            }
+            if (tab === 'about') about.classList.remove('hidden');
+            
+            // Update nav links
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+            if (tab === 'home') document.getElementById('homeNav')?.classList.add('active');
+            
+            // Close mobile menu
+            document.getElementById('mobileMenu')?.classList.remove('show');
+        }
+
+        // Initial render
+        renderATMs('All', 'all');
+        document.getElementById('homeNav')?.classList.add('active');
     </script>
 </body>
 </html>
